@@ -1,0 +1,19 @@
+{
+  "author": "Calvin Montgomery",
+  "name": "pcrecpp",
+  "description": "Node.js binding for Google's C++ wrapper to PCRE",
+  "version": "0.0.0",
+  "repository": {
+    "url": "https://github.com/calzoneman/node-pcrecpp"
+  },
+  "gypfile": true,
+  "dependencies": {
+    "nan": "*"
+  },
+  "devDependencies": {
+    "mocha": "^2.0.1"
+  },
+  "scripts": {
+      "test": "mocha"
+  }
+}
