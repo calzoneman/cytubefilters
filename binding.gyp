@@ -10,7 +10,7 @@
             "dependencies": [
                 "deps/libpcre/libpcre.gyp:libpcre"
             ],
-            "include_dirs": ["<!(node -e \"require('nan')\")", "/usr/include"]
+            "include_dirs": ["<!(node -e \"require('nan')\")", "/usr/include", "deps/libpcre"]
         }
     ]
 }
