@@ -14,6 +14,8 @@ class Filter
         Filter(const Filter& copy);
         ~Filter();
 
+        Filter& operator=(const Filter& rhs);
+
         const std::string& source() const;
         const std::string& name() const;
         const std::string& replacement() const;

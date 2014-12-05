@@ -51,6 +51,21 @@ Filter::Filter(const Filter& copy) : m_Replacement(copy.m_Replacement),
     this->m_Options = options.all_options();
 }
 
+Filter& Filter::operator=(const Filter& rhs)
+{
+    this->m_Replacement = rhs.m_Replacement;
+    this->m_Name = rhs.m_Name;
+    this->m_Global = rhs.m_Global;
+    this->m_Active = rhs.m_Active;
+    this->m_FilterLinks = rhs.m_FilterLinks;
+
+    delete this->m_RE;
+    pcrecpp::RE_Options options(rhs.m_Options);
+    this->m_RE = new pcrecpp::RE(rhs.m_RE->pattern(), options);
+    this->m_Options = options.all_options();
+    return *this;
+}
+
 Filter::~Filter()
 {
     delete this->m_RE;

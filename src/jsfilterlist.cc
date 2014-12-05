@@ -159,6 +159,8 @@ void JSFilterList::Init()
         FunctionTemplate::New(JSFilterList::FilterString));
     tpl->InstanceTemplate()->Set(NanNew<String>("pack"),
         FunctionTemplate::New(JSFilterList::Pack));
+    tpl->InstanceTemplate()->Set(NanNew<String>("updateFilter"),
+        FunctionTemplate::New(JSFilterList::UpdateFilter));
 }
 
 void Init(Handle<Object> exports, Handle<Object> module)

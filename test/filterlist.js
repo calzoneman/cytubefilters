@@ -96,4 +96,42 @@ describe('FilterList', function () {
             }
         });
     });
+
+    describe('#updateFilter', function () {
+        it('should update source', function () {
+            var newf = {
+                name: 'abcdef',
+                source: 'new source',
+                replace: 'def',
+                flags: '',
+                active: true,
+                filterlinks: false
+            };
+
+            var list = new FilterList(filters);
+            list.updateFilter(newf);
+
+            var result = list.pack();
+            assert.equal(result.length, 3);
+            assert.deepEqual(result[0], newf);
+        });
+
+        it('should update replace', function () {
+            var newf = {
+                name: 'ghijkl',
+                source: 'ghi',
+                replace: 'qpewrrrrrrt',
+                flags: 'gi',
+                active: true,
+                filterlinks: false
+            };
+
+            var list = new FilterList(filters);
+            list.updateFilter(newf);
+
+            var result = list.pack();
+            assert.equal(result.length, 3);
+            assert.deepEqual(result[1], newf);
+        });
+    });
 });
