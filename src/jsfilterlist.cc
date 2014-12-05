@@ -124,14 +124,27 @@ NAN_METHOD(JSFilterList::UpdateFilter)
     }
 
     Local<Object> obj = args[0]->ToObject();
-    if (!Util::ValidFilter(obj))
+
+    std::string name = *String::Utf8Value(obj->Get(Util::NameField)->ToString());
+    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
+    Filter *filter = wrap->m_FilterList.find_filter(name);
+
+    if (filter == NULL)
     {
-        return NanThrowError("Filter to be updated is invalid");
+        return NanThrowError("Filter to be updated does not exist");
     }
 
-    Filter filter = Util::NewFilter(obj);
-    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
-    wrap->m_FilterList.update_filter(filter);
+    Local<Array> fields = obj->GetPropertyNames();
+    for (unsigned int i = 0; i < fields->Length(); i++)
+    {
+        Local<String> field = fields->Get(i)->ToString();
+        std::string sfield = *String::Utf8Value(field);
+
+        if (sfield == "source")
+        {
+            filter->set_source(*String::Utf8Value(obj->Get(field)->ToString()));
+        }
+    }
 
     NanReturnValue(obj);
 }

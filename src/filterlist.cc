@@ -16,24 +16,18 @@ void FilterList::add_filter(const Filter& filter)
     this->m_Filters.push_back(filter);
 }
 
-void FilterList::update_filter(const Filter& filter)
+Filter* FilterList::find_filter(const std::string& name)
 {
     std::vector<Filter>::iterator it;
-    bool found = false;
     for (it = this->m_Filters.begin(); it < this->m_Filters.end(); it++)
     {
-        if (it->name() == filter.name())
+        if (it->name() == name)
         {
-            *it = filter;
-            found = true;
-            break;
+            return &(*it);
         }
     }
 
-    if (!found)
-    {
-        this->m_Filters.push_back(filter);
-    }
+    return NULL;
 }
 
 void FilterList::remove_filter(const Filter& filter)

@@ -11,7 +11,7 @@ class FilterList
         ~FilterList();
 
         void add_filter(const Filter& filter);
-        void update_filter(const Filter& filter);
+        Filter* find_filter(const std::string& name);
         void remove_filter(const Filter& filter);
         void move_filter(unsigned int from, unsigned int to);
 

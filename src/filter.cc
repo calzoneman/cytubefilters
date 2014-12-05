@@ -19,22 +19,7 @@ Filter::Filter(const std::string& name,
     pcrecpp::RE_Options options;
     options.set_utf8(true);
     options.set_match_limit(MATCH_LIMIT);
-
-    for (size_t i = 0; i < flags.size(); i++)
-    {
-        switch (flags[i])
-        {
-            case 'i':
-                options.set_caseless(true);
-                break;
-            case 'g':
-                this->m_Global = true;
-                break;
-            case 'm':
-                options.set_multiline(true);
-                break;
-        }
-    }
+    this->parse_flags(flags, options);
 
     this->m_RE = new pcrecpp::RE(source, options);
     this->m_Options = options.all_options();
@@ -71,19 +56,31 @@ Filter::~Filter()
     delete this->m_RE;
 }
 
-const std::string& Filter::source() const
-{
-    return this->m_RE->pattern();
-}
-
 const std::string& Filter::name() const
 {
     return this->m_Name;
 }
 
+const std::string& Filter::source() const
+{
+    return this->m_RE->pattern();
+}
+
+void Filter::set_source(const std::string& source)
+{
+    delete this->m_RE;
+    pcrecpp::RE_Options options(this->m_Options);
+    this->m_RE = new pcrecpp::RE(source, options);
+}
+
 const std::string& Filter::replacement() const
 {
     return this->m_Replacement;
+}
+
+void Filter::set_replacement(const std::string& replacement)
+{
+    this->m_Replacement = replacement;
 }
 
 std::string Filter::flags() const
@@ -95,6 +92,33 @@ std::string Filter::flags() const
     if (copy.multiline()) flags.push_back('m');
 
     return flags;
+}
+
+void Filter::set_flags(const std::string& flags)
+{
+    pcrecpp::RE_Options options(this->m_Options);
+    this->parse_flags(flags, options);
+    this->m_Options = options.all_options();
+}
+
+bool Filter::active() const
+{
+    return this->m_Active;
+}
+
+void Filter::set_active(bool active)
+{
+    this->m_Active = active;
+}
+
+bool Filter::filter_links() const
+{
+    return this->m_FilterLinks;
+}
+
+void Filter::set_filter_links(bool filter_links)
+{
+    this->m_FilterLinks = filter_links;
 }
 
 bool Filter::exec(std::string* input) const
@@ -109,12 +133,21 @@ bool Filter::exec(std::string* input) const
     }
 }
 
-bool Filter::active() const
+void Filter::parse_flags(const std::string& flags, pcrecpp::RE_Options& options)
 {
-    return this->m_Active;
-}
-
-bool Filter::filter_links() const
-{
-    return this->m_FilterLinks;
+    for (size_t i = 0; i < flags.size(); i++)
+    {
+        switch (flags[i])
+        {
+            case 'i':
+                options.set_caseless(true);
+                break;
+            case 'g':
+                this->m_Global = true;
+                break;
+            case 'm':
+                options.set_multiline(true);
+                break;
+        }
+    }
 }
