@@ -19,13 +19,20 @@ void FilterList::add_filter(const Filter& filter)
 void FilterList::update_filter(const Filter& filter)
 {
     std::vector<Filter>::iterator it;
+    bool found = false;
     for (it = this->m_Filters.begin(); it < this->m_Filters.end(); it++)
     {
         if (it->name() == filter.name())
         {
             *it = filter;
+            found = true;
             break;
         }
+    }
+
+    if (!found)
+    {
+        this->m_Filters.push_back(filter);
     }
 }
 

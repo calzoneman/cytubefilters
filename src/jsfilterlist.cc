@@ -6,6 +6,7 @@
 #include "./jsfilterlist.h"
 #include "./filterlist.h"
 #include "./filter.h"
+#include "./util.h"
 
 using v8::Handle;
 using v8::Array;
@@ -47,13 +48,6 @@ NAN_METHOD(JSFilterList::New)
     Local<Object> filters = args[0]->ToObject();
     Local<Array> indexes = filters->GetPropertyNames();
 
-    Local<String> name_field = NanNew<String>("name"),
-        source_field         = NanNew<String>("source"),
-        flags_field          = NanNew<String>("flags"),
-        replace_field        = NanNew<String>("replace"),
-        active_field         = NanNew<String>("active"),
-        filter_links_field   = NanNew<String>("filterlinks");
-
     for (uint32_t i = 0; i < indexes->Length(); i++)
     {
         if (!filters->Get(i)->IsObject())
@@ -64,26 +58,14 @@ NAN_METHOD(JSFilterList::New)
         }
 
         Local<Object> f = filters->Get(i)->ToObject();
-        if (!f->Get(name_field)->IsString() ||
-            !f->Get(source_field)->IsString() ||
-            !f->Get(flags_field)->IsString() ||
-            !f->Get(replace_field)->IsString() ||
-            !f->Get(active_field)->IsBoolean() ||
-            !f->Get(filter_links_field)->IsBoolean())
+        if (!Util::ValidFilter(f))
         {
             std::ostringstream oss;
             oss << "Filter at index " << i << " is invalid";
             return NanThrowTypeError(oss.str().c_str());
         }
-        std::string name(*String::Utf8Value(f->Get(name_field)->ToString()));
-        std::string source(*String::Utf8Value(f->Get(source_field)->ToString()));
-        std::string flags(*String::Utf8Value(f->Get(flags_field)->ToString()));
-        std::string replacement(*String::Utf8Value(f->Get(replace_field)->ToString()));
-        bool active = f->Get(active_field)->BooleanValue();
-        bool filter_links = f->Get(filter_links_field)->BooleanValue();
 
-        Filter filter(name, source, flags, replacement, active, filter_links);
-        filter_list.add_filter(filter);
+        filter_list.add_filter(Util::NewFilter(f));
     }
 
     wrap = new JSFilterList(filter_list);
@@ -115,29 +97,43 @@ NAN_METHOD(JSFilterList::Pack)
     Local<Array> result = NanNew<Array>();
     unsigned int i = 0;
 
-    Local<String> name_field = NanNew<String>("name"),
-        source_field         = NanNew<String>("source"),
-        flags_field          = NanNew<String>("flags"),
-        replace_field        = NanNew<String>("replace"),
-        active_field         = NanNew<String>("active"),
-        filter_links_field   = NanNew<String>("filterlinks");
-
-
     std::vector<Filter>::iterator it;
     for (it = filters.begin(); it < filters.end(); it++, i++)
     {
         Local<Object> filter = NanNew<Object>();
-        filter->Set(name_field         , NanNew<String>(it->name()));
-        filter->Set(source_field       , NanNew<String>(it->source()));
-        filter->Set(flags_field        , NanNew<String>(it->flags()));
-        filter->Set(replace_field      , NanNew<String>(it->replacement()));
-        filter->Set(active_field       , NanNew<Boolean>(it->active()));
-        filter->Set(filter_links_field , NanNew<Boolean>(it->filter_links()));
+        Util::PackFilter(*it, filter);
 
         result->Set(i, filter);
     }
 
     NanReturnValue(result);
+}
+
+NAN_METHOD(JSFilterList::UpdateFilter)
+{
+    NanScope();
+
+    if (args.Length() < 1)
+    {
+        return NanThrowError("UpdateFilter expects 1 argument");
+    }
+
+    if (!args[0]->IsObject())
+    {
+        return NanThrowTypeError("Filter to be upated must be an object");
+    }
+
+    Local<Object> obj = args[0]->ToObject();
+    if (!Util::ValidFilter(obj))
+    {
+        return NanThrowError("Filter to be updated is invalid");
+    }
+
+    Filter filter = Util::NewFilter(obj);
+    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
+    wrap->m_FilterList.update_filter(filter);
+
+    NanReturnValue(obj);
 }
 
 NAN_METHOD(JSFilterList::QuoteMeta)
@@ -168,6 +164,7 @@ void JSFilterList::Init()
 void Init(Handle<Object> exports, Handle<Object> module)
 {
     JSFilterList::Init();
+    Util::Init();
     Local<FunctionTemplate> constructor_handle = NanNew(constructor);
 
     module->Set(NanNew<String>("exports"), constructor_handle->GetFunction());
