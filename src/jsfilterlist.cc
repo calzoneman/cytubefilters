@@ -16,6 +16,7 @@ using v8::Persistent;
 using v8::FunctionTemplate;
 using v8::Local;
 using v8::Boolean;
+using v8::Value;
 
 static Persistent<FunctionTemplate> constructor;
 
@@ -139,14 +140,44 @@ NAN_METHOD(JSFilterList::UpdateFilter)
     {
         Local<String> field = fields->Get(i)->ToString();
         std::string sfield = *String::Utf8Value(field);
+        Local<Value> value = obj->Get(field);
+
+        if (!value->IsString() && (sfield == "source" || sfield == "replace" ||
+            sfield == "flags"))
+        {
+            return NanThrowTypeError(("Field " + sfield + " must be a string").c_str());
+        }
+        else if (!value->IsBoolean() && (sfield == "active" || sfield == "filterlinks"))
+        {
+            return NanThrowTypeError(("Field " + sfield + " must be a boolean").c_str());
+        }
 
         if (sfield == "source")
         {
-            filter->set_source(*String::Utf8Value(obj->Get(field)->ToString()));
+            filter->set_source(*String::Utf8Value(value->ToString()));
+        }
+        else if (sfield == "replace")
+        {
+            filter->set_replacement(*String::Utf8Value(value->ToString()));
+        }
+        else if (sfield == "flags")
+        {
+            filter->set_flags(*String::Utf8Value(value->ToString()));
+        }
+        else if (sfield == "active")
+        {
+            filter->set_active(value->ToBoolean()->BooleanValue());
+        }
+        else if (sfield == "filterlinks")
+        {
+            filter->set_filter_links(value->ToBoolean()->BooleanValue());
         }
     }
 
-    NanReturnValue(obj);
+    Local<Object> retval = NanNew<Object>();
+    Util::PackFilter(*filter, retval);
+
+    NanReturnValue(retval);
 }
 
 NAN_METHOD(JSFilterList::QuoteMeta)

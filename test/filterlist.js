@@ -3,28 +3,52 @@ var FilterList = require('../index');
 
 var filters = [
     {
-        name: 'abcdef',
-        source: 'abc',
-        replace: 'def',
-        flags: '',
+        name: 'monospace',
+        source: '`(.+?)`',
+        replace: '<code>\\1</code>',
+        flags: 'g',
         active: true,
         filterlinks: false
     },
     {
-        name: 'ghijkl',
-        source: 'ghi',
-        replace: 'jkl',
+        name: 'bold',
+        source: '\\*(.+?)\\*',
+        replace: '<strong>\\1</strong>',
+        flags: 'g',
+        active: true,
+        filterlinks: false
+    },
+    {
+        name: 'italic',
+        source: '_(.+?)_',
+        replace: '<em>\\1</em>',
+        flags: 'g',
+        active: true,
+        filterlinks: false
+    },
+    {
+        name: 'strike',
+        source: '~~(.+)~~',
+        replace: '<s>\\1</s>',
+        flags: 'g',
+        active: true,
+        filterlinks: false
+    },
+    {
+        name: 'inline spoiler',
+        source: '\\[sp\\](.*?)\\[\\/sp\\]',
+        replace: '<span class="spoiler">\\1</span>',
         flags: 'ig',
         active: true,
         filterlinks: false
     },
     {
-        name: 'letters and numbers',
-        source: '[a-z]{2}(\\d+)',
-        replace: 'the number is \\1',
-        flags: 'g',
+        name: '.pic',
+        source: '(https?:\\/\\/.+?)\\.pic',
+        replace: '<a href="\\1"><img src="\\1"></a>',
+        flags: 'ig',
         active: true,
-        filterlinks: false
+        filterlinks: true
     }
 ];
 
@@ -108,15 +132,122 @@ describe('FilterList', function () {
             }, /Filter to be updated does not exist/);
         });
 
-        it('should update source', function () {
-            var newf = { name: 'abcdef', source: 'asdf' };
+        it('should throw an error if a field has the wrong value type', function () {
+            var name = filters[0].name;
+            ['source', 'replace', 'flags'].forEach(function (field) {
+                var newf = { name: name };
+                newf[field] = 42;
 
-            var list = new FilterList(filters);
-            list.updateFilter(newf);
+                var list = new FilterList(filters);
+                assert.throws(function () {
+                    list.updateFilter(newf);
+                }, TypeError, new RegExp('Field ' + field + ' must be a string'));
+            });
 
-            var result = list.pack();
-            assert.equal(result.length, 3);
-            assert.equal(result[0].source, newf.source);
+            ['active', 'filterlinks'].forEach(function (field) {
+                var newf = { name: name };
+                newf[field] = 42;
+
+                var list = new FilterList(filters);
+                assert.throws(function () {
+                    list.updateFilter(newf);
+                }, TypeError, new RegExp('Field ' + field + ' must be a boolean'));
+            });
+        });
+
+        it('should update source correctly', function () {
+            for (var i = 0; i < filters.length; i++) {
+                var newf = {
+                    name: filters[i].name,
+                    source: filters[i].source + '|test'
+                };
+
+                var list = new FilterList(filters);
+                list.updateFilter(newf);
+
+                var result = list.pack();
+                assert.equal(result.length, filters.length);
+                assert.equal(result[i].source, newf.source);
+            }
+        });
+
+        it('should update replacement correctly', function () {
+            for (var i = 0; i < filters.length; i++) {
+                var newf = {
+                    name: filters[i].name,
+                    replace: filters[i].replace + '|test'
+                };
+
+                var list = new FilterList(filters);
+                list.updateFilter(newf);
+
+                var result = list.pack();
+                assert.equal(result.length, filters.length);
+                assert.equal(result[i].replace, newf.replace);
+            }
+        });
+
+        it('should update flags correctly', function () {
+            for (var i = 0; i < filters.length; i++) {
+                var newf = {
+                    name: filters[i].name,
+                    flags: 'gim'
+                };
+
+                var list = new FilterList(filters);
+                list.updateFilter(newf);
+
+                var result = list.pack();
+                assert.equal(result.length, filters.length);
+                assert.equal(result[i].flags, newf.flags);
+            }
+        });
+
+        it('should update active correctly', function () {
+            for (var i = 0; i < filters.length; i++) {
+                var newf = {
+                    name: filters[i].name,
+                    active: !filters[i].active
+                };
+
+                var list = new FilterList(filters);
+                list.updateFilter(newf);
+
+                var result = list.pack();
+                assert.equal(result.length, filters.length);
+                assert.equal(result[i].active, newf.active);
+            }
+        });
+
+        it('should update filterlinks correctly', function () {
+            for (var i = 0; i < filters.length; i++) {
+                var newf = {
+                    name: filters[i].name,
+                    filterlinks: !filters[i].filterlinks
+                };
+
+                var list = new FilterList(filters);
+                list.updateFilter(newf);
+
+                var result = list.pack();
+                assert.equal(result.length, filters.length);
+                assert.equal(result[i].filterlinks, newf.filterlinks);
+            }
+        });
+
+        it('should return the updated filter', function () {
+            for (var i = 0; i < filters.length; i++) {
+                var newf = {
+                    name: filters[i].name,
+                    source: filters[i].source + '|test'
+                };
+
+                var list = new FilterList(filters);
+                var updated = list.updateFilter(newf);
+
+                var result = list.pack();
+                assert.deepEqual(updated, result[i]);
+            }
         });
     });
 });
