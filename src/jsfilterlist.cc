@@ -8,16 +8,16 @@
 #include "./filter.h"
 #include "./util.h"
 
-using v8::Handle;
 using v8::Array;
-using v8::Object;
-using v8::String;
-using v8::Persistent;
-using v8::FunctionTemplate;
-using v8::Local;
 using v8::Boolean;
-using v8::Value;
+using v8::FunctionTemplate;
+using v8::Handle;
+using v8::Local;
 using v8::Number;
+using v8::Object;
+using v8::Persistent;
+using v8::String;
+using v8::Value;
 
 static Persistent<FunctionTemplate> constructor;
 
