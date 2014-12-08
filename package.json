@@ -1,10 +1,10 @@
 {
   "author": "Calvin Montgomery",
-  "name": "pcrecpp",
-  "description": "Node.js binding for Google's C++ wrapper to PCRE",
-  "version": "0.0.0",
+  "name": "cytubefilters",
+  "description": "Node.js binding for CyTube filters based on Google's C++ wrapper to PCRE",
+  "version": "0.0.1",
   "repository": {
-    "url": "https://github.com/calzoneman/node-pcrecpp"
+    "url": "https://github.com/calzoneman/cytubefilters"
   },
   "gypfile": true,
   "dependencies": {
