@@ -17,6 +17,7 @@ using v8::FunctionTemplate;
 using v8::Local;
 using v8::Boolean;
 using v8::Value;
+using v8::Number;
 
 static Persistent<FunctionTemplate> constructor;
 
@@ -116,12 +117,12 @@ NAN_METHOD(JSFilterList::UpdateFilter)
 
     if (args.Length() < 1)
     {
-        return NanThrowError("UpdateFilter expects 1 argument");
+        return NanThrowError("updateFilter expects 1 argument");
     }
 
     if (!args[0]->IsObject())
     {
-        return NanThrowTypeError("Filter to be upated must be an object");
+        return NanThrowTypeError("Filter to be updated must be an object");
     }
 
     Local<Object> obj = args[0]->ToObject();
@@ -180,6 +181,90 @@ NAN_METHOD(JSFilterList::UpdateFilter)
     NanReturnValue(retval);
 }
 
+NAN_METHOD(JSFilterList::RemoveFilter)
+{
+    NanScope();
+
+    if (args.Length() < 1)
+    {
+        return NanThrowError("removeFilter expects 1 argument");
+    }
+
+    if (!args[0]->IsObject())
+    {
+        return NanThrowTypeError("Filter to be removed must be an object");
+    }
+
+    Local<Object> obj = args[0]->ToObject();
+
+    std::string name = *String::Utf8Value(obj->Get(Util::NameField)->ToString());
+    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
+
+    NanReturnValue(NanNew<Boolean>(wrap->m_FilterList.remove_filter(name)));
+}
+
+NAN_METHOD(JSFilterList::MoveFilter)
+{
+    NanScope();
+
+    if (args.Length() != 2)
+    {
+        return NanThrowError("moveFilter expects 2 arguments");
+    }
+
+    if (!args[0]->IsInt32() || !args[1]->IsInt32())
+    {
+        return NanThrowTypeError("Arguments 'from' and 'to' must both be integers");
+    }
+
+    std::vector<Filter>::size_type from = args[0]->Int32Value(),
+                                   to = args[1]->Int32Value();
+
+    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
+    if (from >= wrap->m_FilterList.size() || to >= wrap->m_FilterList.size())
+    {
+        return NanThrowError("Argument out of range");
+    }
+
+    wrap->m_FilterList.move_filter(from, to);
+    NanReturnUndefined();
+}
+
+NAN_METHOD(JSFilterList::AddFilter)
+{
+    NanScope();
+
+    if (args.Length() != 1)
+    {
+        return NanThrowError("addFilter expects 1 argument");
+    }
+
+    if (!args[0]->IsObject())
+    {
+        return NanThrowTypeError("Filter to add must be an object");
+    }
+
+    Local<Object> f = args[0]->ToObject();
+    if (!Util::ValidFilter(f))
+    {
+        return NanThrowError("Invalid filter");
+    }
+
+    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
+
+    wrap->m_FilterList.add_filter(Util::NewFilter(f));
+    NanReturnUndefined();
+}
+
+NAN_GETTER(JSFilterList::GetLength)
+{
+    NanScope();
+
+    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
+
+    NanReturnValue(NanNew<Number>(wrap->m_FilterList.size()));
+}
+
 NAN_METHOD(JSFilterList::QuoteMeta)
 {
     NanScope();
@@ -203,8 +288,17 @@ void JSFilterList::Init()
         FunctionTemplate::New(JSFilterList::FilterString));
     tpl->InstanceTemplate()->Set(NanNew<String>("pack"),
         FunctionTemplate::New(JSFilterList::Pack));
+    tpl->InstanceTemplate()->Set(NanNew<String>("addFilter"),
+        FunctionTemplate::New(JSFilterList::AddFilter));
     tpl->InstanceTemplate()->Set(NanNew<String>("updateFilter"),
         FunctionTemplate::New(JSFilterList::UpdateFilter));
+    tpl->InstanceTemplate()->Set(NanNew<String>("removeFilter"),
+        FunctionTemplate::New(JSFilterList::RemoveFilter));
+    tpl->InstanceTemplate()->Set(NanNew<String>("moveFilter"),
+        FunctionTemplate::New(JSFilterList::MoveFilter));
+
+    tpl->InstanceTemplate()->SetAccessor(NanNew<String>("length"),
+        JSFilterList::GetLength);
 }
 
 void Init(Handle<Object> exports, Handle<Object> module)

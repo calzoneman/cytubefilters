@@ -20,7 +20,12 @@ class JSFilterList : public ObjectWrap
         static NAN_METHOD(New);
         static NAN_METHOD(FilterString);
         static NAN_METHOD(Pack);
+        static NAN_METHOD(AddFilter);
         static NAN_METHOD(UpdateFilter);
+        static NAN_METHOD(RemoveFilter);
+        static NAN_METHOD(MoveFilter);
+
+        static NAN_GETTER(GetLength);
 
         static NAN_METHOD(QuoteMeta);
 

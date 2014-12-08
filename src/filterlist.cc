@@ -30,17 +30,19 @@ Filter* FilterList::find_filter(const std::string& name)
     return NULL;
 }
 
-void FilterList::remove_filter(const Filter& filter)
+bool FilterList::remove_filter(const std::string& name)
 {
     std::vector<Filter>::iterator it;
     for (it = this->m_Filters.begin(); it < this->m_Filters.end(); it++)
     {
-        if (it->name() == filter.name())
+        if (it->name() == name)
         {
             this->m_Filters.erase(it);
-            break;
+            return true;
         }
     }
+
+    return false;
 }
 
 void FilterList::move_filter(unsigned int from, unsigned int to)
@@ -63,4 +65,9 @@ void FilterList::exec(std::string* input, bool filter_links)
 const std::vector<Filter>& FilterList::filters() const
 {
     return this->m_Filters;
+}
+
+std::vector<Filter>::size_type FilterList::size() const
+{
+    return this->m_Filters.size();
 }

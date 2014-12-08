@@ -63,20 +63,23 @@ describe('FilterList', function () {
     describe('constructor', function () {
         it('should accept a valid list in the constructor', function () {
             var list = new FilterList(filters);
+            assert.equal(list.length, filters.length);
         });
 
         it('should accept an empty list in the constructor', function () {
             var list = new FilterList([]);
+            assert.equal(list.length, 0);
         });
 
         it('should allow no list in the constructor', function () {
             var list = new FilterList();
+            assert.equal(list.length, 0);
         });
 
         it('should throw a TypeError if the argument is not an array', function () {
             assert.throws(function () {
                 var list = new FilterList(2.3);
-            }, TypeError, /Argument to FilterList constructor must be an array/);
+            }, /Argument to FilterList constructor must be an array/);
         });
 
         it('should throw a TypeError if any filter is not an object', function () {
@@ -84,7 +87,7 @@ describe('FilterList', function () {
             f2.push('abcdef');
             assert.throws(function () {
                 var list = new FilterList(f2);
-            }, TypeError, /Filter at index 3 is not an object/);
+            }, /Filter at index 6 is not an object/);
         });
 
         it('should throw a TypeError if any filter is invalid', function () {
@@ -92,7 +95,7 @@ describe('FilterList', function () {
             f2.push({});
             assert.throws(function () {
                 var list = new FilterList(f2);
-            }, TypeError, /Filter at index 3 is invalid/);
+            }, /Filter at index 6 is invalid/);
         });
     });
 
@@ -121,7 +124,68 @@ describe('FilterList', function () {
         });
     });
 
+    describe('#addFilter', function () {
+        it('should throw an error if no arguments are given', function () {
+            var list = new FilterList(filters);
+
+            assert.throws(function () {
+                list.addFilter();
+            }, /addFilter expects 1 argument/);
+        });
+
+        it('should throw an error if the argument is not an object', function () {
+            var list = new FilterList(filters);
+
+            assert.throws(function () {
+                list.addFilter(42);
+            }, /Filter to add must be an object/);
+        });
+
+        it('should throw an error if the argument is not a valid filter', function () {
+            var list = new FilterList(filters);
+
+            assert.throws(function () {
+                list.addFilter({ name: 'bad' });
+            }, /Invalid filter/);
+        });
+
+        it('should add a valid filter', function () {
+            var list = new FilterList(filters);
+
+            var newf = {
+                name: 'mmkay',
+                source: '$',
+                replace: 'mmkay',
+                flags: '',
+                active: true,
+                filterlinks: false
+            };
+
+            list.addFilter(newf);
+
+            var result = list.pack();
+            assert.deepEqual(result[result.length - 1], newf);
+            assert.equal(list.length, filters.length + 1);
+        });
+    });
+
     describe('#updateFilter', function () {
+        it('should throw an error if no arguments are given', function () {
+            var list = new FilterList(filters);
+
+            assert.throws(function () {
+                list.updateFilter();
+            }, /updateFilter expects 1 argument/);
+        });
+
+        it('should throw an error if the argument is not an object', function () {
+            var list = new FilterList(filters);
+
+            assert.throws(function () {
+                list.updateFilter(42);
+            }, /Filter to be updated must be an object/);
+        });
+
         it('should throw an error if the filter does not exist', function () {
             var newf = { name: 'dne', source: 'asdf' };
 
@@ -141,7 +205,7 @@ describe('FilterList', function () {
                 var list = new FilterList(filters);
                 assert.throws(function () {
                     list.updateFilter(newf);
-                }, TypeError, new RegExp('Field ' + field + ' must be a string'));
+                }, new RegExp('Field ' + field + ' must be a string'));
             });
 
             ['active', 'filterlinks'].forEach(function (field) {
@@ -151,7 +215,7 @@ describe('FilterList', function () {
                 var list = new FilterList(filters);
                 assert.throws(function () {
                     list.updateFilter(newf);
-                }, TypeError, new RegExp('Field ' + field + ' must be a boolean'));
+                }, new RegExp('Field ' + field + ' must be a boolean'));
             });
         });
 
@@ -247,6 +311,100 @@ describe('FilterList', function () {
 
                 var result = list.pack();
                 assert.deepEqual(updated, result[i]);
+            }
+        });
+    });
+
+    describe('#removeFilter', function () {
+        it('should throw an error if no arguments are given', function () {
+            var list = new FilterList(filters);
+
+            assert.throws(function () {
+                list.removeFilter();
+            }, /removeFilter expects 1 argument/);
+        });
+
+        it('should throw an error if the argument is not an object', function () {
+            var list = new FilterList(filters);
+
+            assert.throws(function () {
+                list.removeFilter(42);
+            }, /Filter to be removed must be an object/);
+        });
+
+        it('should return false if the filter does not exist', function () {
+            var newf = { name: 'dne', source: 'asdf' };
+
+            var list = new FilterList(filters);
+
+            assert.equal(list.removeFilter(newf), false);
+        });
+
+        it('should remove filters correctly', function () {
+            var list = new FilterList(filters);
+            for (var i = 0; i < filters.length; i++) {
+                assert.equal(list.removeFilter(filters[i]), true);
+                assert.equal(list.length, filters.length - i - 1);
+            }
+        });
+    });
+
+    describe('#moveFilter', function () {
+        it('should throw an error if no arguments are given', function () {
+            var list = new FilterList(filters);
+
+            assert.throws(function () {
+                list.moveFilter();
+            }, /moveFilter expects 2 arguments/);
+        });
+
+        it('should throw an error if either argument is not an integer', function () {
+            var list = new FilterList(filters);
+
+            assert.throws(function () {
+                list.moveFilter(42.5, 1);
+            }, /Arguments 'from' and 'to' must both be integers/);
+
+            assert.throws(function () {
+                list.moveFilter(1, "abc");
+            }, /Arguments 'from' and 'to' must both be integers/);
+        });
+
+        it('should throw an error if an argument is out of range', function () {
+            var list = new FilterList(filters);
+
+            assert.throws(function () {
+                list.moveFilter(-1, 0);
+            }, /Argument out of range/);
+
+            assert.throws(function () {
+                list.moveFilter(filters.length, 0);
+            }, /Argument out of range/);
+
+            assert.throws(function () {
+                list.moveFilter(1, filters.length);
+            }, /Argument out of range/);
+
+            assert.throws(function () {
+                list.moveFilter(1, filters.length + 24);
+            }, /Argument out of range/);
+        });
+
+        it('should move filters correctly', function () {
+            // Pseudorandom sequence; hardcoded so that tests are deterministic
+            var moves = [4, 1, 4, 0, 5, 5, 2, 3, 0, 3, 5, 4, 5, 4, 5, 3, 3, 4, 5, 0, 3];
+            var list = new FilterList(filters);
+            var prev = list.pack();
+
+            for (var i = 0; i < 100; i++) {
+                var from = moves[i % moves.length] % filters.length;
+                var to = moves[(i+1) % moves.length] % filters.length;
+
+                list.moveFilter(from, to);
+                var next = list.pack();
+                assert.deepEqual(next[to], prev[from]);
+                assert.deepEqual(next[from], prev[to]);
+                prev = next;
             }
         });
     });
