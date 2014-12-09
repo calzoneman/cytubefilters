@@ -38,6 +38,9 @@
             "conditions": [
                 [ "OS=='linux'", {
                     "include_dirs": ["linux"]
+                }],
+                [ "OS=='freebsd'", {
+                    "include_dirs": ["freebsd"]
                 }]
             ]
         }
