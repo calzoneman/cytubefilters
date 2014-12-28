@@ -274,6 +274,19 @@ NAN_METHOD(JSFilterList::QuoteMeta)
     NanReturnValue(NanNew<String>(quoted));
 }
 
+NAN_METHOD(JSFilterList::CheckValidRegex)
+{
+    NanScope();
+
+    pcrecpp::RE re(*String::Utf8Value(args[0]->ToString()));
+    if (re.error().size() > 0)
+    {
+        return NanThrowError(re.error().c_str());
+    }
+
+    NanReturnValue(NanNew<Boolean>(true));
+}
+
 void JSFilterList::Init()
 {
     Local<FunctionTemplate> tpl = NanNew<FunctionTemplate>(JSFilterList::New);
@@ -283,6 +296,8 @@ void JSFilterList::Init()
 
     tpl->Set(NanNew<String>("quoteMeta"),
         FunctionTemplate::New(JSFilterList::QuoteMeta));
+    tpl->Set(NanNew<String>("checkValidRegex"),
+        FunctionTemplate::New(JSFilterList::CheckValidRegex));
 
     tpl->InstanceTemplate()->Set(NanNew<String>("filter"),
         FunctionTemplate::New(JSFilterList::FilterString));

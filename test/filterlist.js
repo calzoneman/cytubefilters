@@ -59,6 +59,12 @@ var quoted = {
     '1.5-2.0?': '1\\.5\\-2\\.0\\?'
 };
 
+var invalid = {
+    '[a': 'missing terminating ] for character class',
+    '(?<=.*)': 'lookbehind assertion is not fixed length',
+    '(bc': 'missing )'
+};
+
 describe('FilterList', function () {
     describe('constructor', function () {
         it('should accept a valid list in the constructor', function () {
@@ -105,6 +111,16 @@ describe('FilterList', function () {
                 assert.equal(FilterList.quoteMeta(key), quoted[key]);
             });
         }
+    });
+
+    describe('#checkValidRegex', function () {
+        Object.keys(invalid).forEach(function (key) {
+            it('should raise an error for ' + key, function () {
+                assert.throws(function () {
+                    FilterList.checkValidRegex(key);
+                }, invalid[key]);
+            });
+        });
     });
 
     describe('#pack', function () {

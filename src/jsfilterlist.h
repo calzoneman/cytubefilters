@@ -28,6 +28,7 @@ class JSFilterList : public ObjectWrap
         static NAN_GETTER(GetLength);
 
         static NAN_METHOD(QuoteMeta);
+        static NAN_METHOD(CheckValidRegex);
 
         FilterList m_FilterList;
 };
