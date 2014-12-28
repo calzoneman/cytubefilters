@@ -60,9 +60,9 @@ var quoted = {
 };
 
 var invalid = {
-    '[a': 'missing terminating ] for character class',
-    '(?<=.*)': 'lookbehind assertion is not fixed length',
-    '(bc': 'missing )'
+    '[a': /missing terminating \] for character class/,
+    '(?<=.*)': /lookbehind assertion is not fixed length/,
+    '(bc': /missing \)/
 };
 
 describe('FilterList', function () {
@@ -182,6 +182,23 @@ describe('FilterList', function () {
             var result = list.pack();
             assert.deepEqual(result[result.length - 1], newf);
             assert.equal(list.length, filters.length + 1);
+        });
+
+        it('should throw an error if a filter with the given name already exists', function () {
+            var list = new FilterList(filters);
+
+            var newf = {
+                name: 'bold',
+                source: '\\*\\*(.+?)\\*\\*',
+                replace: '<strong>\\1</strong>',
+                flags: '',
+                active: true,
+                filterlinks: false
+            };
+
+            assert.throws(function () {
+                list.addFilter(newf);
+            }, /Error: Filter 'bold' already exists.  Please choose a different name/);
         });
     });
 

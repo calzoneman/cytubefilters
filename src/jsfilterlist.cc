@@ -251,6 +251,13 @@ NAN_METHOD(JSFilterList::AddFilter)
     }
 
     JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
+    std::string name = *String::Utf8Value(f->Get(Util::NameField)->ToString());
+    Filter *filter = wrap->m_FilterList.find_filter(name);
+
+    if (filter != NULL)
+    {
+        return NanThrowError(("Filter '" + name + "' already exists.  Please choose a different name").c_str());
+    }
 
     wrap->m_FilterList.add_filter(Util::NewFilter(f));
     NanReturnUndefined();
