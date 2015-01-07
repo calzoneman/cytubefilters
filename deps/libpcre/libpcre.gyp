@@ -42,7 +42,7 @@
                 [ "OS=='freebsd'", {
                     "include_dirs": ["freebsd"]
                 }],
-                [ "OS=='osx'", {
+                [ "OS=='mac'", {
                     "include_dirs": ["osx"]
                 }]
             ]
