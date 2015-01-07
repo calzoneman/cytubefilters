@@ -41,6 +41,9 @@
                 }],
                 [ "OS=='freebsd'", {
                     "include_dirs": ["freebsd"]
+                }],
+                [ "OS=='osx'", {
+                    "include_dirs": ["osx"]
                 }]
             ]
         }
