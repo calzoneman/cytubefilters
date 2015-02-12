@@ -17,12 +17,12 @@ namespace Util
 
     bool ValidFilter(const Local<Object>& obj)
     {
-        if (!obj->Get(NameField)->IsString() ||
-            !obj->Get(SourceField)->IsString() ||
-            !obj->Get(FlagsField)->IsString() ||
-            !obj->Get(ReplaceField)->IsString() ||
-            !obj->Get(ActiveField)->IsBoolean() ||
-            !obj->Get(FilterLinksField)->IsBoolean())
+        if (!obj->Get(NanNew<String>(NameField))->IsString() ||
+            !obj->Get(NanNew<String>(SourceField))->IsString() ||
+            !obj->Get(NanNew<String>(FlagsField))->IsString() ||
+            !obj->Get(NanNew<String>(ReplaceField))->IsString() ||
+            !obj->Get(NanNew<String>(ActiveField))->IsBoolean() ||
+            !obj->Get(NanNew<String>(FilterLinksField))->IsBoolean())
         {
             return false;
         }
@@ -32,12 +32,16 @@ namespace Util
 
     Filter NewFilter(const Local<Object>& obj)
     {
-        std::string name(*String::Utf8Value(obj->Get(NameField)->ToString()));
-        std::string source(*String::Utf8Value(obj->Get(SourceField)->ToString()));
-        std::string flags(*String::Utf8Value(obj->Get(FlagsField)->ToString()));
-        std::string replacement(*String::Utf8Value(obj->Get(ReplaceField)->ToString()));
-        bool active = obj->Get(ActiveField)->BooleanValue();
-        bool filter_links = obj->Get(FilterLinksField)->BooleanValue();
+        std::string name(*String::Utf8Value(
+                obj->Get(NanNew<String>(NameField))->ToString()));
+        std::string source(*String::Utf8Value(
+                obj->Get(NanNew<String>(SourceField))->ToString()));
+        std::string flags(*String::Utf8Value(
+                obj->Get(NanNew<String>(FlagsField))->ToString()));
+        std::string replacement(*String::Utf8Value(
+                obj->Get(NanNew<String>(ReplaceField))->ToString()));
+        bool active = obj->Get(NanNew<String>(ActiveField))->BooleanValue();
+        bool filter_links = obj->Get(NanNew<String>(FilterLinksField))->BooleanValue();
 
         Filter filter(name, source, flags, replacement, active, filter_links);
         return filter;
@@ -45,21 +49,21 @@ namespace Util
 
     void PackFilter(const Filter& src, Local<Object>& dst)
     {
-        dst->Set(NameField         , NanNew<String>(src.name()));
-        dst->Set(SourceField       , NanNew<String>(src.source()));
-        dst->Set(FlagsField        , NanNew<String>(src.flags()));
-        dst->Set(ReplaceField      , NanNew<String>(src.replacement()));
-        dst->Set(ActiveField       , NanNew<Boolean>(src.active()));
-        dst->Set(FilterLinksField  , NanNew<Boolean>(src.filter_links()));
+        dst->Set(NanNew<String>(NameField)         , NanNew<String>(src.name()));
+        dst->Set(NanNew<String>(SourceField)       , NanNew<String>(src.source()));
+        dst->Set(NanNew<String>(FlagsField)        , NanNew<String>(src.flags()));
+        dst->Set(NanNew<String>(ReplaceField)      , NanNew<String>(src.replacement()));
+        dst->Set(NanNew<String>(ActiveField)       , NanNew<Boolean>(src.active()));
+        dst->Set(NanNew<String>(FilterLinksField)  , NanNew<Boolean>(src.filter_links()));
     }
 
     void Init()
     {
-        NameField           = Persistent<String>::New(NanNew<String>("name"));
-        SourceField         = Persistent<String>::New(NanNew<String>("source"));
-        FlagsField          = Persistent<String>::New(NanNew<String>("flags"));
-        ReplaceField        = Persistent<String>::New(NanNew<String>("replace"));
-        ActiveField         = Persistent<String>::New(NanNew<String>("active"));
-        FilterLinksField    = Persistent<String>::New(NanNew<String>("filterlinks"));
+        NanAssignPersistent(NameField, NanNew<String>("name"));
+        NanAssignPersistent(SourceField, NanNew<String>("source"));
+        NanAssignPersistent(FlagsField, NanNew<String>("flags"));
+        NanAssignPersistent(ReplaceField, NanNew<String>("replace"));
+        NanAssignPersistent(ActiveField, NanNew<String>("active"));
+        NanAssignPersistent(FilterLinksField, NanNew<String>("filterlinks"));
     }
 }

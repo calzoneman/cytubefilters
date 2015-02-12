@@ -127,7 +127,8 @@ NAN_METHOD(JSFilterList::UpdateFilter)
 
     Local<Object> obj = args[0]->ToObject();
 
-    std::string name = *String::Utf8Value(obj->Get(Util::NameField)->ToString());
+    std::string name = *String::Utf8Value(
+            obj->Get(NanNew<String>(Util::NameField))->ToString());
     JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
     Filter *filter = wrap->m_FilterList.find_filter(name);
 
@@ -197,7 +198,8 @@ NAN_METHOD(JSFilterList::RemoveFilter)
 
     Local<Object> obj = args[0]->ToObject();
 
-    std::string name = *String::Utf8Value(obj->Get(Util::NameField)->ToString());
+    std::string name = *String::Utf8Value(
+            obj->Get(NanNew<String>(Util::NameField))->ToString());
     JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
 
     NanReturnValue(NanNew<Boolean>(wrap->m_FilterList.remove_filter(name)));
@@ -251,7 +253,8 @@ NAN_METHOD(JSFilterList::AddFilter)
     }
 
     JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
-    std::string name = *String::Utf8Value(f->Get(Util::NameField)->ToString());
+    std::string name = *String::Utf8Value(
+            f->Get(NanNew<String>(Util::NameField))->ToString());
     Filter *filter = wrap->m_FilterList.find_filter(name);
 
     if (filter != NULL)
@@ -302,22 +305,22 @@ void JSFilterList::Init()
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
     tpl->Set(NanNew<String>("quoteMeta"),
-        FunctionTemplate::New(JSFilterList::QuoteMeta));
+        NanNew<FunctionTemplate>(JSFilterList::QuoteMeta));
     tpl->Set(NanNew<String>("checkValidRegex"),
-        FunctionTemplate::New(JSFilterList::CheckValidRegex));
+        NanNew<FunctionTemplate>(JSFilterList::CheckValidRegex));
 
     tpl->InstanceTemplate()->Set(NanNew<String>("filter"),
-        FunctionTemplate::New(JSFilterList::FilterString));
+        NanNew<FunctionTemplate>(JSFilterList::FilterString));
     tpl->InstanceTemplate()->Set(NanNew<String>("pack"),
-        FunctionTemplate::New(JSFilterList::Pack));
+        NanNew<FunctionTemplate>(JSFilterList::Pack));
     tpl->InstanceTemplate()->Set(NanNew<String>("addFilter"),
-        FunctionTemplate::New(JSFilterList::AddFilter));
+        NanNew<FunctionTemplate>(JSFilterList::AddFilter));
     tpl->InstanceTemplate()->Set(NanNew<String>("updateFilter"),
-        FunctionTemplate::New(JSFilterList::UpdateFilter));
+        NanNew<FunctionTemplate>(JSFilterList::UpdateFilter));
     tpl->InstanceTemplate()->Set(NanNew<String>("removeFilter"),
-        FunctionTemplate::New(JSFilterList::RemoveFilter));
+        NanNew<FunctionTemplate>(JSFilterList::RemoveFilter));
     tpl->InstanceTemplate()->Set(NanNew<String>("moveFilter"),
-        FunctionTemplate::New(JSFilterList::MoveFilter));
+        NanNew<FunctionTemplate>(JSFilterList::MoveFilter));
 
     tpl->InstanceTemplate()->SetAccessor(NanNew<String>("length"),
         JSFilterList::GetLength);
