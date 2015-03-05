@@ -441,4 +441,13 @@ describe('FilterList', function () {
             }
         });
     });
+
+    describe('#filter', function () {
+        it('should filter a string correctly', function () {
+            var list = new FilterList(filters);
+            var src = '*bold* _italic_ `code`';
+            var expect = '<strong>bold</strong> <em>italic</em> <code>code</code>';
+            assert.equal(list.filter(src), expect);
+        });
+    });
 });
