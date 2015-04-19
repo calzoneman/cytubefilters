@@ -122,10 +122,10 @@ sure both macros are undefined; an emulation function will then be used. */
 /* #undef HAVE_STRTOIMAX */
 
 /* Define to 1 if you have `strtoll'. */
-/* #undef HAVE_STRTOLL */
+#define HAVE_STRTOLL 1
 
 /* Define to 1 if you have `strtoq'. */
-#define HAVE_STRTOQ 1
+/* #undef HAVE_STRTOQ */
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
@@ -330,7 +330,7 @@ sure both macros are undefined; an emulation function will then be used. */
    This will work even in an EBCDIC environment, but it is incompatible with
    the EBCDIC macro. That is, PCRE can support *either* EBCDIC code *or*
    ASCII/UTF-8/16/32, but not both at once. */
-#define SUPPORT_UTF /**/
+/* #undef SUPPORT_UTF */
 
 /* Define to any value for valgrind support to find invalid memory reads. */
 /* #undef SUPPORT_VALGRIND */
