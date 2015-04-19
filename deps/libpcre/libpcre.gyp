@@ -44,6 +44,9 @@
                 }],
                 [ "OS=='mac'", {
                     "include_dirs": ["osx"]
+                }],
+                [ "OS=='solaris'", {
+                    "include_dirs": ["solaris"]
                 }]
             ]
         }
