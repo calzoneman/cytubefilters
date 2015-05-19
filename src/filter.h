@@ -2,6 +2,8 @@
 
 #include <pcrecpp.h>
 
+#define DEFAULT_FLAGS PCRE_UTF8 | PCRE_JAVASCRIPT_COMPAT
+
 class Filter
 {
     public:
@@ -42,7 +44,5 @@ class Filter
         bool m_Global;
         bool m_Active;
         bool m_FilterLinks;
-        int m_Options;
-
-        void parse_flags(const std::string& flags, pcrecpp::RE_Options& options);
+        int m_Flags;
 };

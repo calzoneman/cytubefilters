@@ -288,7 +288,7 @@ NAN_METHOD(JSFilterList::CheckValidRegex)
 {
     NanScope();
 
-    pcrecpp::RE re(*String::Utf8Value(args[0]->ToString()));
+    pcrecpp::RE re(*String::Utf8Value(args[0]->ToString()), DEFAULT_FLAGS);
     if (re.error().size() > 0)
     {
         return NanThrowError(re.error().c_str());
