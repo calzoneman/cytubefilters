@@ -70,6 +70,7 @@ void Filter::set_source(const std::string& source)
 {
     delete this->m_RE;
     pcrecpp::RE_Options options(this->m_Flags);
+    options.set_match_limit(MATCH_LIMIT);
     this->m_RE = new pcrecpp::RE(source, options);
 }
 
