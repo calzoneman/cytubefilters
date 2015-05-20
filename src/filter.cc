@@ -16,13 +16,11 @@ Filter::Filter(const std::string& name,
     m_Active(active),
     m_FilterLinks(filter_links)
 {
-    pcrecpp::RE_Options options;
-    options.set_utf8(true);
+    this->set_flags(flags);
+    pcrecpp::RE_Options options(this->m_Flags);
     options.set_match_limit(MATCH_LIMIT);
-    this->parse_flags(flags, options);
 
     this->m_RE = new pcrecpp::RE(source, options);
-    this->m_Options = options.all_options();
 }
 
 Filter::Filter(const Filter& copy) : m_Replacement(copy.m_Replacement),
@@ -31,9 +29,10 @@ Filter::Filter(const Filter& copy) : m_Replacement(copy.m_Replacement),
     m_Active(copy.m_Active),
     m_FilterLinks(copy.m_FilterLinks)
 {
-    pcrecpp::RE_Options options(copy.m_Options);
+    this->m_Flags = copy.m_Flags;
+    pcrecpp::RE_Options options(this->m_Flags);
+    options.set_match_limit(MATCH_LIMIT);
     this->m_RE = new pcrecpp::RE(copy.m_RE->pattern(), options);
-    this->m_Options = options.all_options();
 }
 
 Filter& Filter::operator=(const Filter& rhs)
@@ -45,9 +44,10 @@ Filter& Filter::operator=(const Filter& rhs)
     this->m_FilterLinks = rhs.m_FilterLinks;
 
     delete this->m_RE;
-    pcrecpp::RE_Options options(rhs.m_Options);
+    this->m_Flags = rhs.m_Flags;
+    pcrecpp::RE_Options options(this->m_Flags);
+    options.set_match_limit(MATCH_LIMIT);
     this->m_RE = new pcrecpp::RE(rhs.m_RE->pattern(), options);
-    this->m_Options = options.all_options();
     return *this;
 }
 
@@ -69,7 +69,8 @@ const std::string& Filter::source() const
 void Filter::set_source(const std::string& source)
 {
     delete this->m_RE;
-    pcrecpp::RE_Options options(this->m_Options);
+    pcrecpp::RE_Options options(this->m_Flags);
+    options.set_match_limit(MATCH_LIMIT);
     this->m_RE = new pcrecpp::RE(source, options);
 }
 
@@ -86,19 +87,31 @@ void Filter::set_replacement(const std::string& replacement)
 std::string Filter::flags() const
 {
     std::string flags = "";
-    pcrecpp::RE_Options copy(this->m_Options);
-    if (this->m_Global)   flags.push_back('g');
-    if (copy.caseless())  flags.push_back('i');
-    if (copy.multiline()) flags.push_back('m');
+    if (this->m_Global)                 flags.push_back('g');
+    if (this->m_Flags & PCRE_CASELESS)  flags.push_back('i');
+    if (this->m_Flags & PCRE_MULTILINE) flags.push_back('m');
 
     return flags;
 }
 
 void Filter::set_flags(const std::string& flags)
 {
-    pcrecpp::RE_Options options(this->m_Options);
-    this->parse_flags(flags, options);
-    this->m_Options = options.all_options();
+    this->m_Flags = DEFAULT_FLAGS;
+    for (size_t i = 0; i < flags.size(); i++)
+    {
+        switch (flags[i])
+        {
+            case 'i':
+                this->m_Flags |= PCRE_CASELESS;
+                break;
+            case 'g':
+                this->m_Global = true;
+                break;
+            case 'm':
+                this->m_Flags |= PCRE_MULTILINE;
+                break;
+        }
+    }
 }
 
 bool Filter::active() const
@@ -130,24 +143,5 @@ bool Filter::exec(std::string* input) const
     else
     {
         return this->m_RE->Replace(this->m_Replacement, input);
-    }
-}
-
-void Filter::parse_flags(const std::string& flags, pcrecpp::RE_Options& options)
-{
-    for (size_t i = 0; i < flags.size(); i++)
-    {
-        switch (flags[i])
-        {
-            case 'i':
-                options.set_caseless(true);
-                break;
-            case 'g':
-                this->m_Global = true;
-                break;
-            case 'm':
-                options.set_multiline(true);
-                break;
-        }
     }
 }

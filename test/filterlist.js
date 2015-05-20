@@ -65,6 +65,11 @@ var invalid = {
     '(bc': /missing \)/
 };
 
+var valid = [
+    '\\uabcd',
+    '\\p{Mn}'
+];
+
 describe('FilterList', function () {
     describe('constructor', function () {
         it('should accept a valid list in the constructor', function () {
@@ -119,6 +124,12 @@ describe('FilterList', function () {
                 assert.throws(function () {
                     FilterList.checkValidRegex(key);
                 }, invalid[key]);
+            });
+        });
+
+        valid.forEach(function (regex) {
+            it('should not raise an error for ' + regex, function () {
+                FilterList.checkValidRegex(regex);
             });
         });
     });
@@ -447,6 +458,36 @@ describe('FilterList', function () {
             var list = new FilterList(filters);
             var src = '*bold* _italic_ `code`';
             var expect = '<strong>bold</strong> <em>italic</em> <code>code</code>';
+            assert.equal(list.filter(src), expect);
+        });
+
+        it('should filter \\uxxxx correctly', function () {
+            var list = new FilterList([{
+                name: 'unicode',
+                source: '\\u2031',
+                replace: '%',
+                flags: 'g',
+                active: true,
+                filterlinks: false
+            }]);
+
+            var src = '‱';
+            var expect = '%';
+            assert.equal(list.filter(src), expect);
+        });
+
+        it('should filter \\p{} correctly', function () {
+            var list = new FilterList([{
+                name: 'unicode',
+                source: '\\p{M}',
+                replace: '',
+                flags: 'g',
+                active: true,
+                filterlinks: false
+            }]);
+
+            var src = 'x\u20dd';
+            var expect = 'x';
             assert.equal(list.filter(src), expect);
         });
     });
