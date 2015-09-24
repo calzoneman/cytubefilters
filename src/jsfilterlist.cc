@@ -19,7 +19,7 @@ using v8::Persistent;
 using v8::String;
 using v8::Value;
 
-static Persistent<FunctionTemplate> constructor;
+static Nan::Persistent<FunctionTemplate> constructor;
 
 JSFilterList::JSFilterList(const FilterList& filter_list) : m_FilterList(filter_list)
 {
@@ -31,23 +31,25 @@ JSFilterList::~JSFilterList()
 
 NAN_METHOD(JSFilterList::New)
 {
-    NanScope();
+    Nan::HandleScope scope;
 
     JSFilterList *wrap;
     FilterList filter_list;
-    if (args.Length() == 0)
+    if (info.Length() == 0)
     {
         wrap = new JSFilterList(filter_list);
-        wrap->Wrap(args.This());
-        NanReturnThis();
+        wrap->Wrap(info.This());
+        info.GetReturnValue().Set(info.This());
+        return;
     }
 
-    if (!args[0]->IsArray())
+    if (!info[0]->IsArray())
     {
-        return NanThrowTypeError("Argument to FilterList constructor must be an array");
+        Nan::ThrowTypeError("Argument to FilterList constructor must be an array");
+        return;
     }
 
-    Local<Object> filters = args[0]->ToObject();
+    Local<Object> filters = info[0]->ToObject();
     Local<Array> indexes = filters->GetPropertyNames();
 
     for (uint32_t i = 0; i < indexes->Length(); i++)
@@ -56,7 +58,8 @@ NAN_METHOD(JSFilterList::New)
         {
             std::ostringstream oss;
             oss << "Filter at index " << i << " is not an object";
-            return NanThrowTypeError(oss.str().c_str());
+            Nan::ThrowTypeError(oss.str().c_str());
+            return;
         }
 
         Local<Object> f = filters->Get(i)->ToObject();
@@ -64,107 +67,114 @@ NAN_METHOD(JSFilterList::New)
         {
             std::ostringstream oss;
             oss << "Filter at index " << i << " is invalid";
-            return NanThrowTypeError(oss.str().c_str());
+            Nan::ThrowTypeError(oss.str().c_str());
+            return;
         }
 
         filter_list.add_filter(Util::NewFilter(f));
     }
 
     wrap = new JSFilterList(filter_list);
-    wrap->Wrap(args.This());
+    wrap->Wrap(info.This());
 
-    NanReturnThis();
+    info.GetReturnValue().Set(info.This());
 }
 
 NAN_METHOD(JSFilterList::FilterString)
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    std::string input = *String::Utf8Value(args[0]->ToString());
-    bool filter_links = args[1]->BooleanValue();
+    std::string input = *Nan::Utf8String(info[0]->ToString());
+    bool filter_links = info[1]->BooleanValue();
 
-    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
+    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(info.This());
 
     wrap->m_FilterList.exec(&input, filter_links);
 
-    NanReturnValue(NanNew<String>(input));
+    info.GetReturnValue().Set(Nan::New<String>(input).ToLocalChecked());
 }
 
 NAN_METHOD(JSFilterList::Pack)
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
+    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(info.This());
     std::vector<Filter> filters = wrap->m_FilterList.filters();
-    Local<Array> result = NanNew<Array>();
+    Local<Array> result = Nan::New<Array>();
     unsigned int i = 0;
 
     std::vector<Filter>::iterator it;
     for (it = filters.begin(); it < filters.end(); it++, i++)
     {
-        Local<Object> filter = NanNew<Object>();
+        Local<Object> filter = Nan::New<Object>();
         Util::PackFilter(*it, filter);
 
-        result->Set(i, filter);
+        Nan::Set(result, i, filter);
     }
 
-    NanReturnValue(result);
+    info.GetReturnValue().Set(result);
 }
 
 NAN_METHOD(JSFilterList::UpdateFilter)
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    if (args.Length() < 1)
+    if (info.Length() < 1)
     {
-        return NanThrowError("updateFilter expects 1 argument");
+        Nan::ThrowError("updateFilter expects 1 argument");
+        return;
     }
 
-    if (!args[0]->IsObject())
+    if (!info[0]->IsObject())
     {
-        return NanThrowTypeError("Filter to be updated must be an object");
+        Nan::ThrowTypeError("Filter to be updated must be an object");
+        return;
     }
 
-    Local<Object> obj = args[0]->ToObject();
+    Local<Object> obj = info[0]->ToObject();
 
-    std::string name = *String::Utf8Value(
-            obj->Get(NanNew<String>(Util::NameField))->ToString());
-    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
+    std::string name = *Nan::Utf8String(
+            Nan::Get(obj, Nan::New<String>("name").ToLocalChecked())
+                .ToLocalChecked()->ToString());
+    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(info.This());
     Filter *filter = wrap->m_FilterList.find_filter(name);
 
     if (filter == NULL)
     {
-        return NanThrowError("Filter to be updated does not exist");
+        Nan::ThrowError("Filter to be updated does not exist");
+        return;
     }
 
     Local<Array> fields = obj->GetPropertyNames();
     for (unsigned int i = 0; i < fields->Length(); i++)
     {
-        Local<String> field = fields->Get(i)->ToString();
-        std::string sfield = *String::Utf8Value(field);
-        Local<Value> value = obj->Get(field);
+        Local<String> field = Nan::Get(fields, i).ToLocalChecked()->ToString();
+        std::string sfield = *Nan::Utf8String(field);
+        Local<Value> value = Nan::Get(obj, field).ToLocalChecked();
 
         if (!value->IsString() && (sfield == "source" || sfield == "replace" ||
             sfield == "flags"))
         {
-            return NanThrowTypeError(("Field " + sfield + " must be a string").c_str());
+            Nan::ThrowTypeError(("Field " + sfield + " must be a string").c_str());
+            return;
         }
         else if (!value->IsBoolean() && (sfield == "active" || sfield == "filterlinks"))
         {
-            return NanThrowTypeError(("Field " + sfield + " must be a boolean").c_str());
+            Nan::ThrowTypeError(("Field " + sfield + " must be a boolean").c_str());
+            return;
         }
 
         if (sfield == "source")
         {
-            filter->set_source(*String::Utf8Value(value->ToString()));
+            filter->set_source(*Nan::Utf8String(value->ToString()));
         }
         else if (sfield == "replace")
         {
-            filter->set_replacement(*String::Utf8Value(value->ToString()));
+            filter->set_replacement(*Nan::Utf8String(value->ToString()));
         }
         else if (sfield == "flags")
         {
-            filter->set_flags(*String::Utf8Value(value->ToString()));
+            filter->set_flags(*Nan::Utf8String(value->ToString()));
         }
         else if (sfield == "active")
         {
@@ -176,163 +186,174 @@ NAN_METHOD(JSFilterList::UpdateFilter)
         }
     }
 
-    Local<Object> retval = NanNew<Object>();
+    Local<Object> retval = Nan::New<Object>();
     Util::PackFilter(*filter, retval);
 
-    NanReturnValue(retval);
+    info.GetReturnValue().Set(retval);
 }
 
 NAN_METHOD(JSFilterList::RemoveFilter)
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    if (args.Length() < 1)
+    if (info.Length() < 1)
     {
-        return NanThrowError("removeFilter expects 1 argument");
+        Nan::ThrowError("removeFilter expects 1 argument");
+        return;
     }
 
-    if (!args[0]->IsObject())
+    if (!info[0]->IsObject())
     {
-        return NanThrowTypeError("Filter to be removed must be an object");
+        Nan::ThrowTypeError("Filter to be removed must be an object");
+        return;
     }
 
-    Local<Object> obj = args[0]->ToObject();
+    Local<Object> obj = info[0]->ToObject();
 
-    std::string name = *String::Utf8Value(
-            obj->Get(NanNew<String>(Util::NameField))->ToString());
-    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
+    std::string name = *Nan::Utf8String(
+            Nan::Get(obj, Nan::New<String>("name").ToLocalChecked())
+                .ToLocalChecked()->ToString());
+    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(info.This());
 
-    NanReturnValue(NanNew<Boolean>(wrap->m_FilterList.remove_filter(name)));
+    Local<Boolean> removed = Nan::New<Boolean>(wrap->m_FilterList.remove_filter(name));
+    info.GetReturnValue().Set(removed);
 }
 
 NAN_METHOD(JSFilterList::MoveFilter)
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    if (args.Length() != 2)
+    if (info.Length() != 2)
     {
-        return NanThrowError("moveFilter expects 2 arguments");
+        Nan::ThrowError("moveFilter expects 2 arguments");
+        return;
     }
 
-    if (!args[0]->IsInt32() || !args[1]->IsInt32())
+    if (!info[0]->IsInt32() || !info[1]->IsInt32())
     {
-        return NanThrowTypeError("Arguments 'from' and 'to' must both be integers");
+        Nan::ThrowTypeError("Arguments 'from' and 'to' must both be integers");
+        return;
     }
 
-    std::vector<Filter>::size_type from = args[0]->Int32Value(),
-                                   to = args[1]->Int32Value();
+    std::vector<Filter>::size_type from = info[0]->Int32Value(),
+                                   to = info[1]->Int32Value();
 
-    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
+    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(info.This());
     if (from >= wrap->m_FilterList.size() || to >= wrap->m_FilterList.size())
     {
-        return NanThrowError("Argument out of range");
+        Nan::ThrowError("Argument out of range");
+        return;
     }
 
     wrap->m_FilterList.move_filter(from, to);
-    NanReturnUndefined();
 }
 
 NAN_METHOD(JSFilterList::AddFilter)
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    if (args.Length() != 1)
+    if (info.Length() != 1)
     {
-        return NanThrowError("addFilter expects 1 argument");
+        Nan::ThrowError("addFilter expects 1 argument");
+        return;
     }
 
-    if (!args[0]->IsObject())
+    if (!info[0]->IsObject())
     {
-        return NanThrowTypeError("Filter to add must be an object");
+        Nan::ThrowTypeError("Filter to add must be an object");
+        return;
     }
 
-    Local<Object> f = args[0]->ToObject();
+    Local<Object> f = info[0]->ToObject();
     if (!Util::ValidFilter(f))
     {
-        return NanThrowError("Invalid filter");
+        Nan::ThrowError("Invalid filter");
+        return;
     }
 
-    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
-    std::string name = *String::Utf8Value(
-            f->Get(NanNew<String>(Util::NameField))->ToString());
+    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(info.This());
+    std::string name = *Nan::Utf8String(
+            Nan::Get(f, Nan::New<String>("name").ToLocalChecked())
+                .ToLocalChecked()->ToString());
     Filter *filter = wrap->m_FilterList.find_filter(name);
 
     if (filter != NULL)
     {
-        return NanThrowError(("Filter '" + name + "' already exists.  Please choose a different name").c_str());
+        Nan::ThrowError(("Filter '" + name + "' already exists.  Please choose a different name").c_str());
+        return;
     }
 
     wrap->m_FilterList.add_filter(Util::NewFilter(f));
-    NanReturnUndefined();
 }
 
-NAN_GETTER(JSFilterList::GetLength)
+NAN_PROPERTY_GETTER(JSFilterList::GetLength)
 {
-    NanScope();
+    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(info.This());
 
-    JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(args.This());
-
-    NanReturnValue(NanNew<Number>(wrap->m_FilterList.size()));
+    info.GetReturnValue().Set(Nan::New<Number>(wrap->m_FilterList.size()));
 }
 
 NAN_METHOD(JSFilterList::QuoteMeta)
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    std::string quoted = pcrecpp::RE::QuoteMeta(*String::Utf8Value(args[0]->ToString()));
+    std::string quoted = pcrecpp::RE::QuoteMeta(
+            *Nan::Utf8String(info[0]->ToString()));
 
-    NanReturnValue(NanNew<String>(quoted));
+    info.GetReturnValue().Set(Nan::New<String>(quoted).ToLocalChecked());
 }
 
 NAN_METHOD(JSFilterList::CheckValidRegex)
 {
-    NanScope();
+    Nan::HandleScope scope;
 
-    pcrecpp::RE re(*String::Utf8Value(args[0]->ToString()), DEFAULT_FLAGS);
+    pcrecpp::RE re(*Nan::Utf8String(info[0]->ToString()), DEFAULT_FLAGS);
     if (re.error().size() > 0)
     {
-        return NanThrowError(re.error().c_str());
+        Nan::ThrowError(re.error().c_str());
+        return;
     }
 
-    NanReturnValue(NanNew<Boolean>(true));
+    info.GetReturnValue().Set(Nan::True());
 }
 
 void JSFilterList::Init()
 {
-    Local<FunctionTemplate> tpl = NanNew<FunctionTemplate>(JSFilterList::New);
-    NanAssignPersistent(constructor, tpl);
-    tpl->SetClassName(NanNew<String>("FilterList"));
+    Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(JSFilterList::New);
+    tpl->SetClassName(Nan::New<String>("FilterList").ToLocalChecked());
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-    tpl->Set(NanNew<String>("quoteMeta"),
-        NanNew<FunctionTemplate>(JSFilterList::QuoteMeta));
-    tpl->Set(NanNew<String>("checkValidRegex"),
-        NanNew<FunctionTemplate>(JSFilterList::CheckValidRegex));
+    tpl->Set(Nan::New<String>("quoteMeta").ToLocalChecked(),
+        Nan::New<FunctionTemplate>(JSFilterList::QuoteMeta));
+    tpl->Set(Nan::New<String>("checkValidRegex").ToLocalChecked(),
+        Nan::New<FunctionTemplate>(JSFilterList::CheckValidRegex));
 
-    tpl->InstanceTemplate()->Set(NanNew<String>("filter"),
-        NanNew<FunctionTemplate>(JSFilterList::FilterString));
-    tpl->InstanceTemplate()->Set(NanNew<String>("pack"),
-        NanNew<FunctionTemplate>(JSFilterList::Pack));
-    tpl->InstanceTemplate()->Set(NanNew<String>("addFilter"),
-        NanNew<FunctionTemplate>(JSFilterList::AddFilter));
-    tpl->InstanceTemplate()->Set(NanNew<String>("updateFilter"),
-        NanNew<FunctionTemplate>(JSFilterList::UpdateFilter));
-    tpl->InstanceTemplate()->Set(NanNew<String>("removeFilter"),
-        NanNew<FunctionTemplate>(JSFilterList::RemoveFilter));
-    tpl->InstanceTemplate()->Set(NanNew<String>("moveFilter"),
-        NanNew<FunctionTemplate>(JSFilterList::MoveFilter));
+    tpl->InstanceTemplate()->Set(Nan::New<String>("filter").ToLocalChecked(),
+        Nan::New<FunctionTemplate>(JSFilterList::FilterString));
+    tpl->InstanceTemplate()->Set(Nan::New<String>("pack").ToLocalChecked(),
+        Nan::New<FunctionTemplate>(JSFilterList::Pack));
+    tpl->InstanceTemplate()->Set(Nan::New<String>("addFilter").ToLocalChecked(),
+        Nan::New<FunctionTemplate>(JSFilterList::AddFilter));
+    tpl->InstanceTemplate()->Set(Nan::New<String>("updateFilter").ToLocalChecked(),
+        Nan::New<FunctionTemplate>(JSFilterList::UpdateFilter));
+    tpl->InstanceTemplate()->Set(Nan::New<String>("removeFilter").ToLocalChecked(),
+        Nan::New<FunctionTemplate>(JSFilterList::RemoveFilter));
+    tpl->InstanceTemplate()->Set(Nan::New<String>("moveFilter").ToLocalChecked(),
+        Nan::New<FunctionTemplate>(JSFilterList::MoveFilter));
 
-    tpl->InstanceTemplate()->SetAccessor(NanNew<String>("length"),
+    Nan::SetAccessor(tpl->InstanceTemplate(), Nan::New<String>("length").ToLocalChecked(),
         JSFilterList::GetLength);
+
+    constructor.Reset(tpl);
 }
 
 void Init(Handle<Object> exports, Handle<Object> module)
 {
     JSFilterList::Init();
-    Util::Init();
-    Local<FunctionTemplate> constructor_handle = NanNew(constructor);
+    Local<FunctionTemplate> constructor_handle = Nan::New(constructor);
 
-    module->Set(NanNew<String>("exports"), constructor_handle->GetFunction());
+    Nan::Set(module, Nan::New<String>("exports").ToLocalChecked(),
+            constructor_handle->GetFunction());
 }
 
 NODE_MODULE(cytubefilters, Init);

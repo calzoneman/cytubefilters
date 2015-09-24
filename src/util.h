@@ -11,11 +11,7 @@ using v8::String;
 
 namespace Util
 {
-    extern Persistent<String> NameField, SourceField, FlagsField,
-        ReplaceField, ActiveField, FilterLinksField;
-
     bool ValidFilter(const Local<Object>& obj);
     Filter NewFilter(const Local<Object>& obj);
     void PackFilter(const Filter& src, Local<Object>& dst);
-    void Init();
 }
