@@ -387,7 +387,7 @@ int RE::GlobalReplace(const StringPiece& rewrite,
   int start = 0;
   bool last_match_was_empty_string = false;
 
-  while (start <= static_cast<int>(str->length()) && str->length() < length_limit) {
+  while (start <= static_cast<int>(str->length()) && str->length() < length_limit && out.length() < length_limit) {
     // If the previous match was for the empty string, we shouldn't
     // just match again: we'll match in the same way and get an
     // infinite loop.  Instead, we do the match in a special way:
