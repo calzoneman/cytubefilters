@@ -15,7 +15,7 @@ class FilterList
         bool remove_filter(const std::string& name);
         void move_filter(unsigned int from, unsigned int to);
 
-        void exec(std::string* input, bool filter_links);
+        void exec(std::string* input, bool filter_links, unsigned int length_limit);
         const std::vector<Filter>& filters() const;
         std::vector<Filter>::size_type size() const;
     private:

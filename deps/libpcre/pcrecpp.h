@@ -608,7 +608,8 @@ class PCRECPP_EXP_DEFN RE {
                string *str) const;
 
   int GlobalReplace(const StringPiece& rewrite,
-                    string *str) const;
+                    string *str,
+                    unsigned int length_limit) const;
 
   bool Extract(const StringPiece &rewrite,
                const StringPiece &text,

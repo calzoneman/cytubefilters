@@ -50,7 +50,7 @@ void FilterList::move_filter(unsigned int from, unsigned int to)
     std::swap(this->m_Filters[from], this->m_Filters[to]);
 }
 
-void FilterList::exec(std::string* input, bool filter_links)
+void FilterList::exec(std::string* input, bool filter_links, unsigned int length_limit)
 {
     std::vector<Filter>::iterator it;
     for (it = this->m_Filters.begin(); it < this->m_Filters.end(); it++)
@@ -58,7 +58,7 @@ void FilterList::exec(std::string* input, bool filter_links)
         if (!it->active() || (filter_links && !it->filter_links()))
             continue;
 
-        it->exec(input);
+        it->exec(input, length_limit);
     }
 }
 

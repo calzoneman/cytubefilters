@@ -35,7 +35,7 @@ class Filter
         bool filter_links() const;
         void set_filter_links(bool filter_links);
 
-        bool exec(std::string* input) const;
+        bool exec(std::string* input, unsigned int length_limit) const;
 
     private:
         pcrecpp::RE *m_RE;

@@ -2,7 +2,7 @@
   "author": "Calvin Montgomery",
   "name": "cytubefilters",
   "description": "Node.js binding for CyTube filters based on Google's C++ wrapper to PCRE",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "repository": {
     "url": "https://github.com/calzoneman/cytubefilters"
   },

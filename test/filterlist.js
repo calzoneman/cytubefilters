@@ -490,5 +490,35 @@ describe('FilterList', function () {
             var expect = 'x';
             assert.equal(list.filter(src), expect);
         });
+
+        it('should limit the number of replacements', function () {
+            function makeFilter(a, b) {
+                var bs = '';
+                for (var i = 0; i < 1000; i++) {
+                    bs += b;
+                }
+                var filter = {
+                    name: a + b,
+                    source: a,
+                    replace: bs,
+                    flags: 'g',
+                    active: true,
+                    filterlinks: false
+                };
+                return filter;
+            }
+
+            var list = new FilterList([
+                makeFilter('a', 'b'),
+                makeFilter('b', 'c'),
+                makeFilter('c', 'd'),
+                makeFilter('d', 'e')
+            ]);
+            var start = Date.now();
+            list.filter('a');
+            var end = Date.now();
+            // Assuming it doesn't recursively expand this should take <10ms
+            assert((end - start) < 10);
+        });
     });
 });

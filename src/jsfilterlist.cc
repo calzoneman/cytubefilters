@@ -83,13 +83,23 @@ NAN_METHOD(JSFilterList::New)
 NAN_METHOD(JSFilterList::FilterString)
 {
     Nan::HandleScope scope;
+    static const unsigned int DEFAULT_LENGTH_LIMIT = 1000;
 
     std::string input = *Nan::Utf8String(info[0]->ToString());
     bool filter_links = info[1]->BooleanValue();
+    unsigned int length_limit = DEFAULT_LENGTH_LIMIT;
+    if (info[2]->IsNumber())
+    {
+        Nan::Maybe<int32_t> length_limit_maybe = Nan::To<int32_t>(info[2]);
+        if (length_limit_maybe.IsJust())
+        {
+            length_limit = (unsigned int) length_limit_maybe.FromJust();
+        }
+    }
 
     JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(info.This());
 
-    wrap->m_FilterList.exec(&input, filter_links);
+    wrap->m_FilterList.exec(&input, filter_links, length_limit);
 
     info.GetReturnValue().Set(Nan::New<String>(input).ToLocalChecked());
 }

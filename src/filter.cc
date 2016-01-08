@@ -134,11 +134,11 @@ void Filter::set_filter_links(bool filter_links)
     this->m_FilterLinks = filter_links;
 }
 
-bool Filter::exec(std::string* input) const
+bool Filter::exec(std::string* input, unsigned int length_limit) const
 {
     if (this->m_Global)
     {
-        return this->m_RE->GlobalReplace(this->m_Replacement, input);
+        return this->m_RE->GlobalReplace(this->m_Replacement, input, length_limit);
     }
     else
     {
