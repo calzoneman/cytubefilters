@@ -125,7 +125,7 @@ sure both macros are undefined; an emulation function will then be used. */
 /* #undef HAVE_STRTOLL */
 
 /* Define to 1 if you have `strtoq'. */
-#define HAVE_STRTOQ 1
+#define HAVE_STRTOQ 0
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
