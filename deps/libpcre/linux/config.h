@@ -122,7 +122,7 @@ sure both macros are undefined; an emulation function will then be used. */
 /* #undef HAVE_STRTOIMAX */
 
 /* Define to 1 if you have `strtoll'. */
-/* #undef HAVE_STRTOLL */
+#define HAVE_STRTOLL 1
 
 /* Define to 1 if you have `strtoq'. */
 #undef HAVE_STRTOQ
