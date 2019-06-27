@@ -31,12 +31,12 @@ namespace Util
 
     Filter NewFilter(const Local<Object>& obj)
     {
-        std::string name(*Nan::Utf8String(LOCAL_GET(obj, "name")->ToString()));
-        std::string source(*Nan::Utf8String(LOCAL_GET(obj, "source")->ToString()));
-        std::string flags(*Nan::Utf8String(LOCAL_GET(obj, "flags")->ToString()));
-        std::string replacement(*Nan::Utf8String(LOCAL_GET(obj, "replace")->ToString()));
-        bool active = LOCAL_GET(obj, "active")->BooleanValue();
-        bool filter_links = LOCAL_GET(obj, "filterlinks")->BooleanValue();
+        std::string name(*Nan::Utf8String(LOCAL_GET(obj, "name")));
+        std::string source(*Nan::Utf8String(LOCAL_GET(obj, "source")));
+        std::string flags(*Nan::Utf8String(LOCAL_GET(obj, "flags")));
+        std::string replacement(*Nan::Utf8String(LOCAL_GET(obj, "replace")));
+        bool active = Nan::To<bool>(LOCAL_GET(obj, "active")).FromJust();
+        bool filter_links = Nan::To<bool>(LOCAL_GET(obj, "filterlinks")).FromJust();
 
         Filter filter(name, source, flags, replacement, active, filter_links);
         return filter;
