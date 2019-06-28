@@ -7,6 +7,7 @@
 class Filter
 {
     public:
+        Filter();
         Filter(const std::string& name,
             const std::string& source,
             const std::string& flags,

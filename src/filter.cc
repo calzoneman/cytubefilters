@@ -4,6 +4,10 @@
 
 #define MATCH_LIMIT 5000
 
+Filter::Filter() : m_RE(NULL)
+{
+}
+
 Filter::Filter(const std::string& name,
     const std::string& source,
     const std::string& flags,
@@ -53,7 +57,7 @@ Filter& Filter::operator=(const Filter& rhs)
 
 Filter::~Filter()
 {
-    delete this->m_RE;
+    if (this->m_RE != NULL) delete this->m_RE;
 }
 
 const std::string& Filter::name() const
