@@ -64,25 +64,18 @@ NAN_METHOD(JSFilterList::New)
 
     for (uint32_t i = 0; i < indexes->Length(); i++)
     {
-        Local<Value> f;
-        if (!Nan::Get(filters, i).ToLocal(&f))
+        Local<Object> f;
+        if (!Util::SafeGetObject(filters, i, f))
         {
             std::ostringstream oss;
-            oss << "Unable to get filter at index " << i;
+            oss << "Filter at index " << i << " is not an object";
             Nan::ThrowTypeError(oss.str().c_str());
             return;
         }
         else
         {
-            Local<Object> filterObject;
-            if (!f->IsObject() || !Nan::To<Object>(f).ToLocal(&filterObject))
-            {
-                std::ostringstream oss;
-                oss << "Filter at index " << i << " is not an object";
-                Nan::ThrowTypeError(oss.str().c_str());
-                return;
-            }
-            else if (!Util::ValidFilter(filterObject))
+            Filter filter;
+            if (!Util::FromJSObject(f, filter))
             {
                 std::ostringstream oss;
                 oss << "Filter at index " << i << " is invalid";
@@ -90,7 +83,7 @@ NAN_METHOD(JSFilterList::New)
                 return;
             }
 
-            filter_list.add_filter(Util::NewFilter(filterObject));
+            filter_list.add_filter(filter);
         }
     }
 
@@ -107,15 +100,15 @@ NAN_METHOD(JSFilterList::FilterString)
 
     std::string input = *Nan::Utf8String(info[0]);
     bool filter_links = Nan::To<bool>(info[1]).FromMaybe(false);
-    int32_t length_limit = DEFAULT_LENGTH_LIMIT;
+    uint32_t length_limit = DEFAULT_LENGTH_LIMIT;
     if (info[2]->IsNumber())
     {
-        length_limit = Nan::To<int32_t>(info[2]).FromMaybe(length_limit);
+        length_limit = Nan::To<uint32_t>(info[2]).FromMaybe(length_limit);
     }
 
     JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(info.This());
 
-    wrap->m_FilterList.exec(&input, filter_links, (unsigned int) length_limit);
+    wrap->m_FilterList.exec(&input, filter_links, length_limit);
 
     Local<String> rv;
     if (!Nan::New<String>(input).ToLocal(&rv))
@@ -140,7 +133,11 @@ NAN_METHOD(JSFilterList::Pack)
     for (it = filters.begin(); it < filters.end(); it++, i++)
     {
         Local<Object> filter = Nan::New<Object>();
-        Util::PackFilter(*it, filter);
+        if (!Util::ToJSObject(*it, filter))
+        {
+            Nan::ThrowError("Unable to convert filter to JS object");
+            return;
+        }
 
         Nan::Set(result, i, filter);
     }
@@ -254,7 +251,11 @@ NAN_METHOD(JSFilterList::UpdateFilter)
     }
 
     Local<Object> retval = Nan::New<Object>();
-    Util::PackFilter(*filter, retval);
+    if (!Util::ToJSObject(*filter, retval))
+    {
+        Nan::ThrowError("Unable to pack filter to JS object");
+        return;
+    }
 
     info.GetReturnValue().Set(retval);
 }
@@ -364,29 +365,15 @@ NAN_METHOD(JSFilterList::AddFilter)
         return;
     }
 
-    if (!Util::ValidFilter(f))
-    {
-        Nan::ThrowError("Invalid filter");
-        return;
-    }
-
     JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(info.This());
 
-    Local<Value> key;
-    if (!Nan::New<String>("name").ToLocal(&key))
+    std::string name;
+    if (!Util::SafeGetString(f, "name", name))
     {
-        Nan::ThrowError("Unable to create object key for access");
+        Nan::ThrowTypeError("Unable to get filter name as string");
         return;
     }
 
-    Local<Value> nameVal;
-    if (!Nan::Get(f, key).ToLocal(&nameVal))
-    {
-        Nan::ThrowError("Unable to extract name from filter object");
-        return;
-    }
-
-    std::string name = *Nan::Utf8String(nameVal);
     Filter *filter = wrap->m_FilterList.find_filter(name);
 
     if (filter != NULL)
@@ -395,7 +382,14 @@ NAN_METHOD(JSFilterList::AddFilter)
         return;
     }
 
-    wrap->m_FilterList.add_filter(Util::NewFilter(f));
+    Filter newFilter;
+    if (!Util::FromJSObject(f, newFilter))
+    {
+        Nan::ThrowTypeError("Invalid filter");
+        return;
+    }
+
+    wrap->m_FilterList.add_filter(newFilter);
 }
 
 NAN_PROPERTY_GETTER(JSFilterList::GetLength)

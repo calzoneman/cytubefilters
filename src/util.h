@@ -11,7 +11,8 @@ using v8::String;
 
 namespace Util
 {
-    bool ValidFilter(const Local<Object>& obj);
-    Filter NewFilter(const Local<Object>& obj);
-    void PackFilter(const Filter& src, Local<Object>& dst);
+    bool SafeGetObject(const Local<Object>& obj, uint32_t index, Local<Object>& dest);
+    bool SafeGetString(const Local<Object>& obj, const char *key, std::string& dest);
+    bool FromJSObject(const Local<Object>& obj, Filter& dest);
+    bool ToJSObject(const Filter& src, Local<Object>& dest);
 }

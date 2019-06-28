@@ -98,7 +98,7 @@ describe('FilterList', function () {
             f2.push('abcdef');
             assert.throws(function () {
                 var list = new FilterList(f2);
-            }, /Filter at index 6 is not an object/);
+            }, /Filter at index 6 is invalid/);
         });
 
         it('should throw a TypeError if any filter is invalid', function () {
