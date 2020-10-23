@@ -9,8 +9,8 @@ addons:
 env:
   - CXX="g++-4.8"
 node_js:
+  - "15"
+  - "14"
   - "12"
-  - "10"
-  - "8"
 os:
   - linux
