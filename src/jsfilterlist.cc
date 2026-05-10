@@ -392,7 +392,7 @@ NAN_METHOD(JSFilterList::AddFilter)
     wrap->m_FilterList.add_filter(newFilter);
 }
 
-NAN_PROPERTY_GETTER(JSFilterList::GetLength)
+NAN_GETTER(JSFilterList::GetLength)
 {
     JSFilterList *wrap = ObjectWrap::Unwrap<JSFilterList>(info.This());
 
